@@ -2,5 +2,5 @@ using TodoApp.Models;
 
 namespace TodoApp.Dtos
 {
-    public record TodoUpdateInputDto(string Title, bool IsDone, Category Category);
+    public record TodoUpdateInputDto(string Title, bool IsDone, Guid CategoryId);
 }

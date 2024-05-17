@@ -30,17 +30,23 @@ namespace TodoApp.Controllers
         [HttpPost]
         public IActionResult Create(TodoCreateInputDto todo, AppDbContext context)
         {
-            if (string.IsNullOrWhiteSpace(todo.Title) || todo.Category == null)
+            if (string.IsNullOrWhiteSpace(todo.Title) || todo.CategoryId == null)
                 return BadRequest();
 
-            Todo newTodo = new Todo(todo.Title, todo.Category);
+            var category = context.Categories.SingleOrDefault(c => !c.IsDeleted && c.Id == todo.CategoryId);
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            Todo newTodo = new Todo(todo.Title, todo.CategoryId);
 
             context.Todos.Add(newTodo);
             context.SaveChanges();
 
-            var todoOutput = new TodoOutputDto(newTodo.Title, newTodo.IsDone, newTodo.Category, newTodo.CreatedAt);
+            var todoOutput = new TodoOutputDto(newTodo.Title, newTodo.IsDone, category.Title, newTodo.CreatedAt);
 
-            return Created(newTodo.Id.ToString(), todoOutput);
+            return Created(nameof(GetById), todoOutput);
         }
 
         [HttpPut("{id}")]
@@ -50,10 +56,10 @@ namespace TodoApp.Controllers
             if (todo == null)
                 return NotFound();
 
-            if (string.IsNullOrWhiteSpace(todoDto.Title) || todoDto.Category == null)
+            if (string.IsNullOrWhiteSpace(todoDto.Title) || todoDto.CategoryId == null)
                 return BadRequest();
 
-            todo.Update(todoDto.Title, todoDto.IsDone, todoDto.Category);
+            todo.Update(todoDto.Title, todoDto.IsDone, todoDto.CategoryId);
             context.SaveChanges();
 
             return NoContent();
@@ -70,6 +76,22 @@ namespace TodoApp.Controllers
             context.SaveChanges();
 
             return NoContent();
+        }
+
+        [HttpPost("/category")]
+        public IActionResult CreateCategory(CategoryInputDto category, AppDbContext context)
+        {
+            if (string.IsNullOrWhiteSpace(category.Title))
+                return BadRequest();
+
+            Category newCategory = new Category(category.Title);
+
+            context.Categories.Add(newCategory);
+            context.SaveChanges();
+
+            var categoryOutput = new CategoryOutputDto(newCategory.Title, newCategory.CreatedAt);
+
+            return Created(nameof(GetById), categoryOutput);
         }
 
         [HttpGet("/category")]

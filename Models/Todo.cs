@@ -10,11 +10,10 @@ namespace TodoApp.Models
 {
     public class Todo
     {
-        public Todo(string title, Category category)
+        public Todo(string title, Guid categoryId)
         {
             Title = title;
-            CategoryId = category.Id;
-            Category = category;
+            CategoryId = categoryId;
             Id = Guid.NewGuid();
             IsDone = false;
             CreatedAt = DateTime.Now;
@@ -25,17 +24,16 @@ namespace TodoApp.Models
         public string Title { get; set; }
         public bool IsDone { get; set; }
         public Guid CategoryId { get; set; }
-        public Category Category { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsDeleted { get; private set; }
 
-        public void Update(string title, bool isDone, Category category)
+        public void Update(string title, bool isDone, Guid categoryId)
         {
             Title = title;
             IsDone = isDone;
             UpdatedAt = DateTime.Now;
-            Category = category;
+            CategoryId = categoryId;
         }
 
         public void Delete()
