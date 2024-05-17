@@ -12,7 +12,10 @@ namespace TodoApp.Controllers
         [HttpGet]
         public IActionResult GetAll(AppDbContext context)
         {
-            var todos = context.Todos.Where(todo => !todo.IsDeleted).ToList();
+            var todos = context.Todos
+                .Where(todo => !todo.IsDeleted)
+                .Select(t => TodoUpdate(t, context))
+                .ToList();
 
             return Ok(todos);
         }
@@ -24,7 +27,7 @@ namespace TodoApp.Controllers
             if (todo == null)
                 return NotFound();
 
-            return Ok(todo);
+            return Ok(TodoUpdate(todo, context));
         }
 
         [HttpPost]
@@ -108,9 +111,36 @@ namespace TodoApp.Controllers
                 return NotFound();
             }
 
-            var todos = context.Todos.Where(t => !t.IsDeleted && t.CategoryId == category.Id).ToList();
+            var todos = context.Todos
+                .Where(t => !t.IsDeleted && t.CategoryId == category.Id && t.IsDone == request.IsDone)
+                .Select(t => new TodoOutputDto(t.Title, t.IsDone, category.Title, t.CreatedAt))
+                .ToList();
 
             return Ok(todos);
+        }
+
+        [HttpGet("/category/all")]
+        public IActionResult GetAllCategory(AppDbContext context)
+        {
+            var categories = context.Categories
+                .Where(c => !c.IsDeleted)
+                .Select(c => new CategoryOutputDto(c.Title, c.CreatedAt))
+                .ToList();
+
+            return Ok(categories);
+        }
+
+        private static TodoOutputDto? TodoUpdate(Todo todo, AppDbContext context)
+        {
+            if (todo.IsDeleted)
+                return null;
+
+            Category? category = context.Categories.SingleOrDefault(c => c.Id == todo.CategoryId);
+            var title = "Sem categoria";
+            if (category != null)
+                title = category.Title;
+
+            return new TodoOutputDto(todo.Title, todo.IsDone, title, todo.CreatedAt);
         }
 
         // [HttpPost("send-file")]
